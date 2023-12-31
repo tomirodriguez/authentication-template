@@ -1,9 +1,8 @@
 "use server";
 
 import type * as z from "zod";
-
 import { RegisterSchema } from "@/schemas/auth";
-import * as bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { db } from "@/server/db";
 import { users } from "@/server/db/schema";
 import { getUserByEmail } from "@/data/user";
@@ -26,7 +25,7 @@ export const register = async (values: z.infer<typeof RegisterSchema>) => {
   }
 
   await db.insert(users).values({
-    id: email,
+    id: crypto.randomUUID(),
     email,
     name,
     password: hashedPassword,
