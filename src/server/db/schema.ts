@@ -3,6 +3,7 @@ import { relations } from "drizzle-orm";
 import {
   index,
   int,
+  mysqlEnum,
   mysqlTableCreator,
   primaryKey,
   text,
@@ -14,17 +15,24 @@ export const mysqlTable = mysqlTableCreator(
   (name) => `authentication_template_${name}`,
 );
 
-export const users = mysqlTable("user", {
-  id: varchar("id", { length: 255 }).notNull().primaryKey(),
-  name: varchar("name", { length: 255 }),
-  password: varchar("password", { length: 255 }).notNull(),
-  email: varchar("email", { length: 255 }).notNull(),
-  emailVerified: timestamp("emailVerified", {
-    mode: "date",
-    fsp: 3,
+export const users = mysqlTable(
+  "user",
+  {
+    id: varchar("id", { length: 255 }).notNull().primaryKey(),
+    name: varchar("name", { length: 255 }),
+    password: varchar("password", { length: 255 }).notNull(),
+    email: varchar("email", { length: 255 }).notNull(),
+    emailVerified: timestamp("emailVerified", {
+      mode: "date",
+      fsp: 3,
+    }),
+    role: mysqlEnum("role", ["ADMIN", "USER"]).default("USER"),
+    image: varchar("image", { length: 255 }),
+  },
+  (user) => ({
+    emailIdx: index("email_idx").on(user.email),
   }),
-  image: varchar("image", { length: 255 }),
-});
+);
 
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
