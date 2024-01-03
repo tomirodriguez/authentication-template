@@ -26,7 +26,7 @@ export const users = mysqlTable(
       mode: "date",
       fsp: 3,
     }),
-    role: mysqlEnum("role", ["ADMIN", "USER"]).default("USER"),
+    role: mysqlEnum("role", ["ADMIN", "USER"]).default("USER").notNull(),
     image: varchar("image", { length: 255 }),
   },
   (user) => ({
