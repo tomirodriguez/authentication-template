@@ -1,10 +1,14 @@
 import * as z from "zod";
 
+export const UserRoleSchema = z.enum(["ADMIN", "USER"]);
+
+export type TUserRole = z.infer<typeof UserRoleSchema>;
+
 export const SettingsSchema = z
   .object({
     name: z.optional(z.string()),
     isTwoFactorEnabled: z.optional(z.boolean()),
-    // role: z.enum([UserRole.ADMIN, UserRole.USER]),
+    role: UserRoleSchema,
     email: z.optional(z.string().email()),
     password: z.optional(z.string().min(6)),
     newPassword: z.optional(z.string().min(6)),
