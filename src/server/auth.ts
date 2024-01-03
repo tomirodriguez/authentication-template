@@ -8,11 +8,11 @@ import { db } from "./db";
 import { mysqlTable } from "./db/schema";
 
 declare module "next-auth" {
+  interface User {
+    role?: TUserRole;
+  }
   interface Session extends DefaultSession {
-    user: {
-      id: string;
-      role: TUserRole;
-    } & DefaultSession["user"];
+    user: User;
   }
 }
 
@@ -23,8 +23,12 @@ export const {
   signOut,
 } = NextAuth({
   callbacks: {
-    async jwt({ token }) {
+    async jwt({ token, user }) {
       if (!token.sub) return token;
+
+      if (user) {
+        token.role = user.role;
+      }
 
       if (!token.role) {
         const existingUser = await getUserById(token.sub);
@@ -36,7 +40,7 @@ export const {
 
       return token;
     },
-    async session({ token, session }) {
+    session({ token, session }) {
       if (session.user && token.sub) {
         session.user.id = token.sub;
       }
