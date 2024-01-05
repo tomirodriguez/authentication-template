@@ -4,8 +4,12 @@ import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import bcrypt from "bcryptjs";
 import NextAuth, { type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Github from "next-auth/providers/github";
+import Google from "next-auth/providers/google";
 import { db } from "./db";
-import { mysqlTable } from "./db/schema";
+import { mysqlTable, users } from "./db/schema";
+import { env } from "@/env";
+import { eq } from "drizzle-orm";
 
 declare module "next-auth" {
   interface User {
@@ -22,6 +26,18 @@ export const {
   signIn,
   signOut,
 } = NextAuth({
+  pages: {
+    signIn: "/auth/login",
+    error: "/auth/error",
+  },
+  events: {
+    async linkAccount({ user }) {
+      await db
+        .update(users)
+        .set({ emailVerified: new Date() })
+        .where(eq(users.id, user.id));
+    },
+  },
   callbacks: {
     async jwt({ token, user }) {
       if (!token.sub) return token;
@@ -57,6 +73,14 @@ export const {
     strategy: "jwt",
   },
   providers: [
+    Google({
+      clientId: env.GOOGLE_CLIENT_ID,
+      clientSecret: env.GOOGLE_CLIENT_SECRET,
+    }),
+    Github({
+      clientId: env.GITHUB_CLIENT_ID,
+      clientSecret: env.GITHUB_CLIENT_SECRET,
+    }),
     Credentials({
       async authorize(credentials) {
         const validatedFields = LoginSchema.safeParse(credentials);

@@ -20,7 +20,7 @@ export const users = mysqlTable(
   {
     id: varchar("id", { length: 255 }).notNull().primaryKey(),
     name: varchar("name", { length: 255 }),
-    password: varchar("password", { length: 255 }).notNull(),
+    password: varchar("password", { length: 255 }),
     email: varchar("email", { length: 255 }).notNull(),
     emailVerified: timestamp("emailVerified", {
       mode: "date",
@@ -36,7 +36,6 @@ export const users = mysqlTable(
 
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
-  sessions: many(sessions),
 }));
 
 export const accounts = mysqlTable(
@@ -66,24 +65,6 @@ export const accounts = mysqlTable(
 
 export const accountsRelations = relations(accounts, ({ one }) => ({
   user: one(users, { fields: [accounts.userId], references: [users.id] }),
-}));
-
-export const sessions = mysqlTable(
-  "session",
-  {
-    sessionToken: varchar("sessionToken", { length: 255 })
-      .notNull()
-      .primaryKey(),
-    userId: varchar("userId", { length: 255 }).notNull(),
-    expires: timestamp("expires", { mode: "date" }).notNull(),
-  },
-  (session) => ({
-    userIdIdx: index("userId_idx").on(session.userId),
-  }),
-);
-
-export const sessionsRelations = relations(sessions, ({ one }) => ({
-  user: one(users, { fields: [sessions.userId], references: [users.id] }),
 }));
 
 export const verificationTokens = mysqlTable(

@@ -26,13 +26,13 @@ import { login } from "@/actions/login";
 export const LoginForm = () => {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
-  const urlError =
+
+  const [error, setError] = useState(
     searchParams.get("error") === "OAuthAccountNotLinked"
       ? "Email already in use with different provider!"
-      : "";
-
-  const [error, setError] = useState<string | undefined>("");
-  const [success, setSuccess] = useState<string | undefined>("");
+      : "",
+  );
+  const [success, setSuccess] = useState("");
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<z.infer<typeof LoginSchema>>({
@@ -51,7 +51,6 @@ export const LoginForm = () => {
       login(values, callbackUrl)
         .then((data) => {
           if (data?.error) {
-            form.reset();
             setError(data.error);
           }
 
@@ -119,7 +118,7 @@ export const LoginForm = () => {
               )}
             />
           </div>
-          <FormError message={error ?? urlError} />
+          <FormError message={error} />
           <FormSuccess message={success} />
           <Button disabled={isPending} type="submit" className="w-full">
             Login
