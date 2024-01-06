@@ -1,5 +1,7 @@
 import * as z from "zod";
 
+// TODO: Unified repeated schemas
+
 export const UserRoleSchema = z.enum(["ADMIN", "USER"]);
 
 export type TUserRole = z.infer<typeof UserRoleSchema>;
@@ -40,11 +42,23 @@ export const SettingsSchema = z
     },
   );
 
-export const NewPasswordSchema = z.object({
-  password: z.string().min(6, {
-    message: "Minimum of 6 characters required",
-  }),
-});
+export const NewPasswordSchema = z
+  .object({
+    password: z.string().min(6, {
+      message: "Minimum of 6 characters required",
+    }),
+    passwordConfirmation: z.string().min(6, {
+      message: "Minimum of 6 characters required",
+    }),
+  })
+  .refine(
+    (data) => {
+      if (data.password !== data.passwordConfirmation) return false;
+
+      return true;
+    },
+    { message: "Passwords do not match", path: ["passwordConfirmation"] },
+  );
 
 export const ResetSchema = z.object({
   email: z.string().email({

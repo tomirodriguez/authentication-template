@@ -78,3 +78,17 @@ export const verificationTokens = mysqlTable(
     compoundKey: primaryKey({ columns: [vt.identifier, vt.token] }),
   }),
 );
+
+export const passwordResetTokens = mysqlTable(
+  "passwordResetToken",
+  {
+    identifier: varchar("identifier", { length: 255 }).notNull(),
+    token: varchar("token", { length: 255 }).notNull(),
+    expires: timestamp("expires", { mode: "date" }).notNull(),
+  },
+  (prt) => {
+    return {
+      compoundKey: primaryKey({ columns: [prt.identifier, prt.token] }),
+    };
+  },
+);

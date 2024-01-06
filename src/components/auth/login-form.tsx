@@ -1,14 +1,10 @@
 "use client";
 
-import type * as z from "zod";
-import { useForm } from "react-hook-form";
-import { useState, useTransition } from "react";
-import { useSearchParams } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import Link from "next/link";
-
-import { LoginSchema } from "@/schemas/auth";
-import { Input } from "@/components/ui/input";
+import { login } from "@/actions/login";
+import { CardWrapper } from "@/components/auth/card-wrapper";
+import { FormError } from "@/components/form-error";
+import { FormSuccess } from "@/components/form-success";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -17,11 +13,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { CardWrapper } from "@/components/auth/card-wrapper";
-import { Button } from "@/components/ui/button";
-import { FormError } from "@/components/form-error";
-import { FormSuccess } from "@/components/form-success";
-import { login } from "@/actions/login";
+import { Input } from "@/components/ui/input";
+import { LoginSchema } from "@/schemas/auth";
+import { zodResolver } from "@hookform/resolvers/zod";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
+import type * as z from "zod";
 
 export const LoginForm = () => {
   const searchParams = useSearchParams();
@@ -50,16 +49,17 @@ export const LoginForm = () => {
     startTransition(() => {
       login(values, callbackUrl)
         .then((data) => {
-          if (data?.error) {
-            setError(data.error);
+          if (!data) {
+            setSuccess("Login successful! Redirecting...");
+            return form.reset();
           }
 
-          if (data?.success) {
-            form.reset();
-            setSuccess(data.success);
-          }
+          if (data.error !== undefined) return setError(data.error);
+
+          setSuccess(data.success);
+          form.reset();
         })
-        .catch(() => setError("Something went wrong"));
+        .catch(console.error);
     });
   };
 
@@ -108,8 +108,8 @@ export const LoginForm = () => {
                   <Button
                     size="sm"
                     variant="link"
-                    asChild
                     className="px-0 font-normal"
+                    asChild
                   >
                     <Link href="/auth/reset">Forgot password?</Link>
                   </Button>

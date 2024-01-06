@@ -3,12 +3,12 @@
 import type * as z from "zod";
 
 import { getUserByEmail } from "@/data/user";
+import { sendVerificationEmail } from "@/lib/mail";
+import { generateVerificationToken } from "@/lib/tokens";
 import { DEFAULT_LOGIN_REDIRECT } from "@/routes";
 import { LoginSchema } from "@/schemas/auth";
 import { signIn } from "@/server/auth";
 import { AuthError } from "next-auth";
-import { generateVerificationToken } from "@/lib/tokens";
-import { sendVerificationEmail } from "@/lib/mail";
 
 export const login = async (
   values: z.infer<typeof LoginSchema>,
@@ -47,8 +47,6 @@ export const login = async (
       password,
       redirectTo: callbackUrl ?? DEFAULT_LOGIN_REDIRECT,
     });
-
-    return { success: "Logged in!" };
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {
@@ -58,7 +56,6 @@ export const login = async (
           return { error: "Something went wrong!" };
       }
     }
-
     throw error;
   }
 };
