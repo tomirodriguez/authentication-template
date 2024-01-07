@@ -1,15 +1,14 @@
-import { getUserByEmail, getUserById } from "@/data/user";
+import { env } from "@/env";
 import { LoginSchema, type TUserRole } from "@/schemas/auth";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import bcrypt from "bcryptjs";
+import { eq } from "drizzle-orm";
 import NextAuth, { type DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Github from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 import { db } from "./db";
 import { mysqlTable, users } from "./db/schema";
-import { env } from "@/env";
-import { eq } from "drizzle-orm";
 
 type ExtendedUser = DefaultSession["user"] & {
   name: string;
@@ -49,27 +48,40 @@ export const {
       // Allow 0Auth without email verification
       if (account?.provider !== "credentials") return true;
 
-      const existingUser = await getUserById(user.id);
+      try {
+        const dbUser = await db.query.users.findFirst({
+          columns: { emailVerified: true },
+          where: (dbUser, { eq }) => eq(dbUser.id, user.id),
+        });
 
-      if (!existingUser?.emailVerified) return false;
+        if (!dbUser) return false;
 
-      // TODO: Add 2FA check here
-
-      return true;
+        return true;
+      } catch {
+        return false;
+      }
     },
     async jwt({ token, user }) {
-      if (!token.sub) return token;
+      const { sub: id } = token;
+      if (!id) return token;
 
       if (user) {
         token.role = user.role;
       }
 
       if (!token.role) {
-        const existingUser = await getUserById(token.sub);
+        try {
+          const dbUser = await db.query.users.findFirst({
+            columns: { role: true },
+            where: (user, { eq }) => eq(user.id, id),
+          });
 
-        if (!existingUser) return token;
+          if (!dbUser) return token;
 
-        token.role = existingUser.role;
+          token.role = dbUser.role;
+        } catch {
+          return token;
+        }
       }
 
       return token;
@@ -103,17 +115,26 @@ export const {
       async authorize(credentials) {
         const validatedFields = LoginSchema.safeParse(credentials);
 
-        if (validatedFields.success) {
-          const { email, password } = validatedFields.data;
-          const user = await getUserByEmail(email);
+        if (!validatedFields.success) return null;
+
+        const { email, password } = validatedFields.data;
+
+        try {
+          const user = await db.query.users.findFirst({
+            where: (user, { eq }) => eq(user.email, email),
+          });
 
           if (!user?.password) return null;
 
-          const passwordsMatch = await bcrypt.compare(password, user.password);
+          const { password: userPassword, ...userWithoutPassword } = user;
 
-          if (passwordsMatch) return user;
+          const passwordsMatch = await bcrypt.compare(password, userPassword);
+          if (passwordsMatch) return userWithoutPassword;
+
+          return null;
+        } catch {
+          return null;
         }
-        return null;
       },
     }),
   ],
