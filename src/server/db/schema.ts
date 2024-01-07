@@ -1,5 +1,5 @@
 import type { AdapterAccount } from "@auth/core/adapters";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   index,
   int,
@@ -28,9 +28,14 @@ export const users = mysqlTable(
     }),
     role: mysqlEnum("role", ["ADMIN", "USER"]).default("USER").notNull(),
     image: varchar("image", { length: 255 }),
+    createdAt: timestamp("created_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+    updatedAt: timestamp("updatedAt").onUpdateNow().notNull(),
   },
   (user) => ({
     emailIdx: index("email_idx").on(user.email),
+    updatedAtIdx: index("updated_at_idx").on(user.updatedAt),
   }),
 );
 
