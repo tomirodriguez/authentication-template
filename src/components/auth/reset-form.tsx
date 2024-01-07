@@ -1,6 +1,6 @@
 "use client";
 
-import { resetPassword } from "@/actions/reset";
+import { resetPassword } from "@/actions/auth/reset";
 import { CardWrapper } from "@/components/auth/card-wrapper";
 import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";

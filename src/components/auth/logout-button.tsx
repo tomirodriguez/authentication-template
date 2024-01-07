@@ -1,4 +1,4 @@
-import { logout } from "@/actions/logout";
+import { logout } from "@/actions/auth/logout";
 
 export const LogoutButton = ({ children }: { children: React.ReactNode }) => {
   return (

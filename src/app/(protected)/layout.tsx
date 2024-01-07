@@ -1,6 +1,7 @@
 import { auth } from "@/server/auth";
 import { SessionProvider } from "next-auth/react";
 import { Navbar } from "./_components/navbar";
+import { Toaster } from "@/components/ui/sonner";
 
 export default async function ProtectedLayout({
   children,
@@ -13,6 +14,7 @@ export default async function ProtectedLayout({
         <Navbar />
         {children}
       </div>
+      <Toaster />
     </SessionProvider>
   );
 }

@@ -11,12 +11,18 @@ import { mysqlTable, users } from "./db/schema";
 import { env } from "@/env";
 import { eq } from "drizzle-orm";
 
+type ExtendedUser = DefaultSession["user"] & {
+  name: string;
+  email: string;
+  role: TUserRole;
+};
+
 declare module "next-auth" {
   interface User {
     role?: TUserRole;
   }
-  interface Session extends DefaultSession {
-    user: User;
+  interface Session {
+    user: ExtendedUser;
   }
 }
 
