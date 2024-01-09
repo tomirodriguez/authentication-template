@@ -1,8 +1,8 @@
 import * as z from "zod";
 
-export const UserRoleSchema = z.enum(["ADMIN", "USER"]);
-
 export type TUserRole = z.infer<typeof UserRoleSchema>;
+
+export const UserRoleSchema = z.enum(["ADMIN", "USER"]);
 
 const EmailSchema = z.string().email({
   message: "Email is required",
@@ -12,12 +12,14 @@ const PasswordSchema = z.string().min(6, {
   message: "Minimum 6 characters required",
 });
 
+const NameSchema = z.string().min(1, {
+  message: "Name is required",
+});
+
 export const RegisterSchema = z.object({
   email: EmailSchema,
   password: PasswordSchema,
-  name: z.string().min(1, {
-    message: "Name is required",
-  }),
+  name: NameSchema,
 });
 
 export const LoginSchema = z.object({
@@ -26,41 +28,14 @@ export const LoginSchema = z.object({
   code: z.optional(z.string()),
 });
 
-export const SettingsSchema = z
-  .object({
-    name: z.optional(z.string()),
-    isTwoFactorEnabled: z.optional(z.boolean()),
-    role: UserRoleSchema,
-    email: z.optional(EmailSchema),
-    password: PasswordSchema,
-    newPassword: PasswordSchema,
-  })
-  .refine(
-    (data) => {
-      if (data.password && !data.newPassword) {
-        return false;
-      }
-
-      return true;
-    },
-    {
-      message: "New password is required!",
-      path: ["newPassword"],
-    },
-  )
-  .refine(
-    (data) => {
-      if (data.newPassword && !data.password) {
-        return false;
-      }
-
-      return true;
-    },
-    {
-      message: "Password is required!",
-      path: ["password"],
-    },
-  );
+export const SettingsSchema = z.object({
+  name: z.optional(NameSchema),
+  isTwoFactorEnabled: z.optional(z.boolean()),
+  role: z.optional(UserRoleSchema),
+  email: z.optional(EmailSchema),
+  password: z.optional(PasswordSchema),
+  // newPassword: PasswordSchema,
+});
 
 export const NewPasswordSchema = z
   .object({

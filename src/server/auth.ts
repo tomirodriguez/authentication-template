@@ -1,3 +1,5 @@
+import "server-only";
+
 import { env } from "@/env";
 import { LoginSchema, type TUserRole } from "@/schemas/auth";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
@@ -14,6 +16,7 @@ type ExtendedUser = DefaultSession["user"] & {
   name: string;
   email: string;
   role: TUserRole;
+  provider: "google" | "github" | "credentials";
 };
 
 declare module "next-auth" {
@@ -61,12 +64,17 @@ export const {
         return false;
       }
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, account }) {
       const { sub: id } = token;
       if (!id) return token;
 
       if (user) {
         token.role = user.role;
+      }
+
+      if (account) {
+        console.log(account.provider);
+        token.provider = account.provider;
       }
 
       if (!token.role) {
@@ -84,6 +92,24 @@ export const {
         }
       }
 
+      if (trigger === "update") {
+        try {
+          const dbUser = await db.query.users.findFirst({
+            columns: { role: true, email: true, name: true, image: true },
+            where: (user, { eq }) => eq(user.id, id),
+          });
+
+          if (!dbUser) return token;
+
+          token.role = dbUser.role;
+          token.email = dbUser.email;
+          token.name = dbUser.name;
+          token.picture = dbUser.image;
+        } catch {
+          return token;
+        }
+      }
+
       return token;
     },
     session({ token, session }) {
@@ -92,7 +118,11 @@ export const {
       }
 
       if (session.user && token.role) {
-        session.user.role = token.role as TUserRole;
+        session.user.role = token.role as ExtendedUser["role"];
+      }
+
+      if (session.user && token.provider) {
+        session.user.provider = token.provider as ExtendedUser["provider"];
       }
 
       return session;
