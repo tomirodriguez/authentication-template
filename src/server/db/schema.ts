@@ -1,3 +1,4 @@
+import { env } from "@/env";
 import type { AdapterAccount } from "@auth/core/adapters";
 import { relations, sql } from "drizzle-orm";
 import {
@@ -12,7 +13,7 @@ import {
 } from "drizzle-orm/mysql-core";
 
 export const mysqlTable = mysqlTableCreator(
-  (name) => `authentication_template_${name}`,
+  (name) => `${env.DATABASE_TABLE_PREFIX}${name}`,
 );
 
 export const users = mysqlTable(

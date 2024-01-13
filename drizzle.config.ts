@@ -8,5 +8,5 @@ export default {
   dbCredentials: {
     uri: env.DATABASE_URL,
   },
-  tablesFilter: ["authentication_template_*"],
+  tablesFilter: [`${env.DATABASE_TABLE_PREFIX}*`],
 } satisfies Config;
